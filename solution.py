@@ -2,10 +2,10 @@ import sys
 import heapq
 
 
-COSTS = {'A':1, 'B':10, 'C':100, 'D':1000}
-TARGET_ROOM_POS = {'A':2, 'B':4, 'C':6, 'D':8}
-ROOM_INDICES = [2,4,6,8]
-INVALID_HALL_POS = set([2,4,6,8])
+COSTS = {'A': 1, 'B': 10, 'C': 100, 'D': 1000}
+TARGET_ROOM_POS = {'A': 2, 'B': 4, 'C': 6, 'D': 8}
+ROOM_INDICES = [2, 4, 6, 8]
+INVALID_HALL_POS = set([2, 4, 6, 8])
 HALL_LEN = 11
 ROOM_DEPTH = 2
 
@@ -27,7 +27,7 @@ def data_input(lines: list[str]):
     top = [lines[2][3], lines[2][5], lines[2][7], lines[2][9]]
     bottom = [lines[3][3], lines[3][5], lines[3][7], lines[3][9]]
 
-    rooms = tuple( (top[i], bottom[i]) for i in range(4) )
+    rooms = tuple((top[i], bottom[i]) for i in range(4))
     return (corridor, rooms)
 
 
@@ -42,7 +42,7 @@ def is_completed(state):
         bool: True if all rooms contain only their respective target objects, else False.
     """
     corridor, rooms = state
-    for i, t in enumerate(['A','B','C','D']):
+    for i, t in enumerate(['A', 'B', 'C', 'D']):
         if any(obj != t for obj in rooms[i]):
             return False
     return True
@@ -79,7 +79,9 @@ def moves_to_target(state, room_id):
 
     if all(r == '.' for r in room):
         return []
-    if room_open('ABCD'[room_id], room) and all(r == 'ABCD'[room_id] or r == '.' for r in room):
+    if room_open('ABCD'[room_id], room) and all(
+        r == 'ABCD'[room_id] or r == '.' for r in room
+    ):
         return []
 
     obj_idx = 0
@@ -91,7 +93,7 @@ def moves_to_target(state, room_id):
     obj = room[obj_idx]
 
     results = []
-    for pos in range(room_pos-1, -1, -1):
+    for pos in range(room_pos - 1, -1, -1):
         if corridor[pos] != '.':
             break
         if pos in INVALID_HALL_POS:
@@ -102,9 +104,11 @@ def moves_to_target(state, room_id):
         new_corridor[pos] = obj
         new_rooms = [list(r) for r in rooms]
         new_rooms[room_id][obj_idx] = '.'
-        results.append(((tuple(new_corridor), tuple(tuple(r) for r in new_rooms)), energy))
+        results.append(
+            ((tuple(new_corridor), tuple(tuple(r) for r in new_rooms)), energy)
+        )
 
-    for pos in range(room_pos+1, HALL_LEN):
+    for pos in range(room_pos + 1, HALL_LEN):
         if corridor[pos] != '.':
             break
         if pos in INVALID_HALL_POS:
@@ -115,7 +119,9 @@ def moves_to_target(state, room_id):
         new_corridor[pos] = obj
         new_rooms = [list(r) for r in rooms]
         new_rooms[room_id][obj_idx] = '.'
-        results.append(((tuple(new_corridor), tuple(tuple(r) for r in new_rooms)), energy))
+        results.append(
+            ((tuple(new_corridor), tuple(tuple(r) for r in new_rooms)), energy)
+        )
 
     return results
 
@@ -179,10 +185,10 @@ def neighbors(state):
     result = []
     corridor, rooms = state
     for i in range(4):
-        for (new_state, cost) in moves_to_target(state, i):
+        for new_state, cost in moves_to_target(state, i):
             result.append((new_state, cost))
     for pos in range(HALL_LEN):
-        for (new_state, cost) in moves_from_hallway(state, pos):
+        for new_state, cost in moves_from_hallway(state, pos):
             result.append((new_state, cost))
     return result
 
@@ -239,7 +245,7 @@ def a_asterisk_search(start, goal_test):
         if goal_test(current):
             return cost
 
-        for (next_state, step_cost) in neighbors(current):
+        for next_state, step_cost in neighbors(current):
             new_cost = cost + step_cost
             if next_state not in cost_so_far or new_cost < cost_so_far[next_state]:
                 cost_so_far[next_state] = new_cost
