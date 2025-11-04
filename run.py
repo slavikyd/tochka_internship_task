@@ -1,7 +1,6 @@
 import sys
 import heapq
 
-
 COSTS = {'A': 1, 'B': 10, 'C': 100, 'D': 1000}
 TARGET_ROOM_POS = {'A': 2, 'B': 4, 'C': 6, 'D': 8}
 ROOM_INDICES = [2, 4, 6, 8]
@@ -23,11 +22,15 @@ def data_input(lines: list[str]):
             rooms (tuple): tuple of tuples - the room objects top and bottom.
     """
     corridor = tuple('.' for _ in range(HALL_LEN))
-
-    top = [lines[2][3], lines[2][5], lines[2][7], lines[2][9]]
-    bottom = [lines[3][3], lines[3][5], lines[3][7], lines[3][9]]
-
-    rooms = tuple((top[i], bottom[i]) for i in range(4))
+    global ROOM_DEPTH
+    ROOM_DEPTH = len(lines) - 3
+    rooms = []
+    for i in range(4):
+        room_objs = []
+        for depth in range(ROOM_DEPTH):
+            room_objs.append(lines[2 + depth][3 + i * 2])
+        rooms.append(tuple(room_objs))
+    rooms = tuple(rooms)
     return (corridor, rooms)
 
 
@@ -76,7 +79,6 @@ def moves_to_target(state, room_id):
     corridor, rooms = state
     room = rooms[room_id]
     room_pos = ROOM_INDICES[room_id]
-
     if all(r == '.' for r in room):
         return []
     if room_open('ABCD'[room_id], room) and all(
@@ -91,6 +93,19 @@ def moves_to_target(state, room_id):
         return []
 
     obj = room[obj_idx]
+
+    for pos in range(HALL_LEN):
+        c_obj = corridor[pos]
+        if c_obj == '.':
+            continue
+        c_target_room_id = 'ABCD'.index(c_obj)
+        c_target_room_pos = ROOM_INDICES[c_target_room_id]
+        c_target_room = rooms[c_target_room_id]
+        if not room_open(c_obj, c_target_room):
+            s = min(pos, c_target_room_pos) + 1
+            e = max(pos, c_target_room_pos)
+            if any(corridor[x] != '.' for x in range(s, e)):
+                return []
 
     results = []
     for pos in range(room_pos - 1, -1, -1):
@@ -107,7 +122,6 @@ def moves_to_target(state, room_id):
         results.append(
             ((tuple(new_corridor), tuple(tuple(r) for r in new_rooms)), energy)
         )
-
     for pos in range(room_pos + 1, HALL_LEN):
         if corridor[pos] != '.':
             break
@@ -122,7 +136,6 @@ def moves_to_target(state, room_id):
         results.append(
             ((tuple(new_corridor), tuple(tuple(r) for r in new_rooms)), energy)
         )
-
     return results
 
 
@@ -151,7 +164,6 @@ def moves_from_hallway(state, hall_pos):
 
     start = min(hall_pos, target_room_pos) + 1
     end = max(hall_pos, target_room_pos)
-
     if any(corridor[pos] != '.' for pos in range(start, end)):
         return []
 
@@ -281,5 +293,5 @@ def main():
     print(result)
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()
