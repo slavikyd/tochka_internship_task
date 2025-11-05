@@ -6,32 +6,24 @@ TARGET_ROOM_POS = {'A': 2, 'B': 4, 'C': 6, 'D': 8}
 ROOM_INDICES = [2, 4, 6, 8]
 INVALID_HALL_POS = set([2, 4, 6, 8])
 HALL_LEN = 11
-ROOM_DEPTH = 2
 
+ROOM_DEPTH = 2
 
 def data_input(lines: list[str]):
     """
     Parses the labyrinth input lines to create the initial labyrinth state.
-
-    Args:
-        lines (list[str]): List of strings representing the labyrinth input.
-
-    Returns:
-        tuple:
-            corridor (tuple): tuple representing spaces in the hallway.
-            rooms (tuple): tuple of tuples - the room objects top and bottom.
     """
     corridor = tuple('.' for _ in range(HALL_LEN))
     global ROOM_DEPTH
-    ROOM_DEPTH = len(lines) - 3
+    ROOM_DEPTH = len(lines) - 3  
     rooms = []
     for i in range(4):
         room_objs = []
         for depth in range(ROOM_DEPTH):
-            room_objs.append(lines[2 + depth][3 + i * 2])
+            room_objs.append(lines[2+depth][3 + i*2])
         rooms.append(tuple(room_objs))
-    rooms = tuple(rooms)
-    return (corridor, rooms)
+    return (corridor, tuple(rooms))
+
 
 
 def is_completed(state):
@@ -66,19 +58,10 @@ def room_open(obj, room):
 
 
 def moves_to_target(state, room_id):
-    """
-    Generates all valid moves of an object from a specified room to position in the corridor.
-
-    Args:
-        state (tuple): Current labyrinth state.
-        room_id (int): Index of the source room.
-
-    Returns:
-        list of tuples: Each tuple contains (new_state, energy_cost) representing a move.
-    """
     corridor, rooms = state
     room = rooms[room_id]
     room_pos = ROOM_INDICES[room_id]
+
     if all(r == '.' for r in room):
         return []
     if room_open('ABCD'[room_id], room) and all(
@@ -94,18 +77,21 @@ def moves_to_target(state, room_id):
 
     obj = room[obj_idx]
 
+    path_left = corridor[:room_pos]
+    path_right = corridor[room_pos+1:]
     for pos in range(HALL_LEN):
         c_obj = corridor[pos]
         if c_obj == '.':
             continue
-        c_target_room_id = 'ABCD'.index(c_obj)
-        c_target_room_pos = ROOM_INDICES[c_target_room_id]
-        c_target_room = rooms[c_target_room_id]
+        c_target_id = 'ABCD'.index(c_obj)
+        c_target_pos = ROOM_INDICES[c_target_id]
+        c_target_room = rooms[c_target_id]
         if not room_open(c_obj, c_target_room):
-            s = min(pos, c_target_room_pos) + 1
-            e = max(pos, c_target_room_pos)
-            if any(corridor[x] != '.' for x in range(s, e)):
-                return []
+            s = min(pos, c_target_pos) + 1
+            e = max(pos, c_target_pos)
+            if any(corridor[x] != '.' for x in range(s,e)):
+                if (pos < room_pos and pos > 0) or (pos > room_pos and pos < HALL_LEN-1):
+                    return []
 
     results = []
     for pos in range(room_pos - 1, -1, -1):
@@ -119,9 +105,8 @@ def moves_to_target(state, room_id):
         new_corridor[pos] = obj
         new_rooms = [list(r) for r in rooms]
         new_rooms[room_id][obj_idx] = '.'
-        results.append(
-            ((tuple(new_corridor), tuple(tuple(r) for r in new_rooms)), energy)
-        )
+        results.append(((tuple(new_corridor), tuple(tuple(r) for r in new_rooms)), energy))
+
     for pos in range(room_pos + 1, HALL_LEN):
         if corridor[pos] != '.':
             break
@@ -133,10 +118,10 @@ def moves_to_target(state, room_id):
         new_corridor[pos] = obj
         new_rooms = [list(r) for r in rooms]
         new_rooms[room_id][obj_idx] = '.'
-        results.append(
-            ((tuple(new_corridor), tuple(tuple(r) for r in new_rooms)), energy)
-        )
+        results.append(((tuple(new_corridor), tuple(tuple(r) for r in new_rooms)), energy))
+
     return results
+
 
 
 def moves_from_hallway(state, hall_pos):
